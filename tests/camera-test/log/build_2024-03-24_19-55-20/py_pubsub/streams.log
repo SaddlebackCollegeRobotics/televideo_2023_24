@@ -1,0 +1,46 @@
+[0.806s] Invoking command in '/home/cameron/workspaces/camera-test/py_pubsub': PYTHONPATH=/home/cameron/workspaces/camera-test/build/py_pubsub/prefix_override:/home/cameron/workspaces/camera-test/install/py_pubsub/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/py_pubsub build --build-base /home/cameron/workspaces/camera-test/build/py_pubsub/build install --record /home/cameron/workspaces/camera-test/build/py_pubsub/install.log --single-version-externally-managed
+[0.999s] running egg_info
+[1.014s] writing ../build/py_pubsub/py_pubsub.egg-info/PKG-INFO
+[1.015s] writing dependency_links to ../build/py_pubsub/py_pubsub.egg-info/dependency_links.txt
+[1.015s] writing entry points to ../build/py_pubsub/py_pubsub.egg-info/entry_points.txt
+[1.015s] writing requirements to ../build/py_pubsub/py_pubsub.egg-info/requires.txt
+[1.015s] writing top-level names to ../build/py_pubsub/py_pubsub.egg-info/top_level.txt
+[1.153s] reading manifest file '../build/py_pubsub/py_pubsub.egg-info/SOURCES.txt'
+[1.153s] writing manifest file '../build/py_pubsub/py_pubsub.egg-info/SOURCES.txt'
+[1.154s] running build
+[1.154s] running build_py
+[1.154s] copying py_pubsub/resolution-test.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.154s] copying py_pubsub/subscriber_member_function.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.154s] copying py_pubsub/__init__.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.154s] copying py_pubsub/camera-test.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.154s] copying py_pubsub/360-test.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.155s] copying py_pubsub/camera-test2.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.155s] copying py_pubsub/publisher_member_function.py -> /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub
+[1.155s] running install
+[1.155s] /home/cameron/.local/lib/python3.10/site-packages/setuptools/_distutils/cmd.py:66: SetuptoolsDeprecationWarning: setup.py install is deprecated.
+[1.155s] !!
+[1.155s] 
+[1.156s]         ********************************************************************************
+[1.156s]         Please avoid running ``setup.py`` directly.
+[1.156s]         Instead, use pypa/build, pypa/installer or other
+[1.156s]         standards-based tools.
+[1.156s] 
+[1.156s]         See https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html for details.
+[1.156s]         ********************************************************************************
+[1.156s] 
+[1.156s] !!
+[1.156s]   self.initialize_options()
+[1.159s] running install_lib
+[1.176s] copying /home/cameron/workspaces/camera-test/build/py_pubsub/build/lib/py_pubsub/publisher_member_function.py -> /home/cameron/workspaces/camera-test/install/py_pubsub/lib/python3.10/site-packages/py_pubsub
+[1.176s] byte-compiling /home/cameron/workspaces/camera-test/install/py_pubsub/lib/python3.10/site-packages/py_pubsub/publisher_member_function.py to publisher_member_function.cpython-310.pyc
+[1.177s] running install_data
+[1.193s] copying resource/py_pubsub -> /home/cameron/workspaces/camera-test/install/py_pubsub/share/ament_index/resource_index/packages
+[1.193s] copying package.xml -> /home/cameron/workspaces/camera-test/install/py_pubsub/share/py_pubsub
+[1.193s] running install_egg_info
+[1.209s] removing '/home/cameron/workspaces/camera-test/install/py_pubsub/lib/python3.10/site-packages/py_pubsub-0.0.0-py3.10.egg-info' (and everything under it)
+[1.210s] Copying ../build/py_pubsub/py_pubsub.egg-info to /home/cameron/workspaces/camera-test/install/py_pubsub/lib/python3.10/site-packages/py_pubsub-0.0.0-py3.10.egg-info
+[1.211s] running install_scripts
+[1.257s] Installing listener script to /home/cameron/workspaces/camera-test/install/py_pubsub/lib/py_pubsub
+[1.257s] Installing talker script to /home/cameron/workspaces/camera-test/install/py_pubsub/lib/py_pubsub
+[1.257s] writing list of installed files to '/home/cameron/workspaces/camera-test/build/py_pubsub/install.log'
+[1.276s] Invoked command in '/home/cameron/workspaces/camera-test/py_pubsub' returned '0': PYTHONPATH=/home/cameron/workspaces/camera-test/build/py_pubsub/prefix_override:/home/cameron/workspaces/camera-test/install/py_pubsub/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/py_pubsub build --build-base /home/cameron/workspaces/camera-test/build/py_pubsub/build install --record /home/cameron/workspaces/camera-test/build/py_pubsub/install.log --single-version-externally-managed

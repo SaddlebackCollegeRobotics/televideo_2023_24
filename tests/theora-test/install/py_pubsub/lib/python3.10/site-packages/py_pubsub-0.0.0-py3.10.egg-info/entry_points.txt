@@ -1,0 +1,6 @@
+[console_scripts]
+webcam_pub_cpu = py_pubsub.webcam_pub_cpu:main
+webcam_pub_gpu = py_pubsub.webcam_pub_gpu:main
+webcam_sub_cpu = py_pubsub.webcam_sub_cpu:main
+webcam_sub_gpu = py_pubsub.webcam_sub_gpu:main
+
