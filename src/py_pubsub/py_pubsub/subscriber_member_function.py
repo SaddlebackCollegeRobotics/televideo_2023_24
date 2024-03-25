@@ -6,7 +6,6 @@ from sensor_msgs.msg import CompressedImage
 import cv2
 from cv_bridge import CvBridge
 
-# import senson qos
 from rclpy.qos import qos_profile_sensor_data
 
 class MinimalSubscriber(Node):
