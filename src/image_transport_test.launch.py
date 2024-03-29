@@ -10,7 +10,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'camera_name': 'camera1'},
-            {'device_index': 2},
+            {'device_index': 0},
             {'image_width': 1920},
             {'image_height': 1080},
             {'camera_fps': 30},
