@@ -16,19 +16,22 @@ int main(int argc, char ** argv)
     rclcpp::NodeOptions options;
     rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("camera_publisher", options);
 
+    node->declare_parameter("camera_name", "camera1");
     node->declare_parameter("device_index", 0);
     node->declare_parameter("image_width", 1280);
     node->declare_parameter("image_height", 720);
     node->declare_parameter("camera_fps", 30);
     node->declare_parameter("compression_format", "MJPG");
-    node->declare_parameter("base_topic", "camera/image");
 
     int device_index = node->get_parameter("device_index").as_int();
     int imageWidth = node->get_parameter("image_width").as_int();
     int imageHeight = node->get_parameter("image_height").as_int();
     int camera_fps = node->get_parameter("camera_fps").as_int();
+
     std::string compression_format = node->get_parameter("compression_format").as_string();
-    std::string base_topic = node->get_parameter("base_topic").as_string();
+    std::string camera_name = node->get_parameter("camera_name").as_string();
+
+    std::string base_topic = camera_name + "/transport";
 
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);

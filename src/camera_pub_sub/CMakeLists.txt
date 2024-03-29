@@ -20,17 +20,23 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4 REQUIRED)
 
 
-# For publisher
-add_executable(camera_publisher src/camera_publisher.cpp)
-ament_target_dependencies(camera_publisher rclcpp sensor_msgs image_transport cv_bridge OpenCV)
+# Camera encoder
+add_executable(camera_encoder src/camera_encoder.cpp)
+ament_target_dependencies(camera_encoder rclcpp sensor_msgs image_transport cv_bridge OpenCV)
 
-# For subscriber
-add_executable(camera_subscriber src/camera_subscriber.cpp)
-ament_target_dependencies(camera_subscriber rclcpp sensor_msgs image_transport cv_bridge OpenCV)
+# Camera decoder
+add_executable(camera_decoder src/camera_decoder.cpp)
+ament_target_dependencies(camera_decoder rclcpp sensor_msgs image_transport cv_bridge OpenCV)
+
+
+# Camera viewer
+add_executable(camera_viewer src/camera_viewer.cpp)
+ament_target_dependencies(camera_viewer rclcpp sensor_msgs image_transport cv_bridge OpenCV)
 
 install(TARGETS
-  camera_publisher
-  camera_subscriber
+  camera_encoder
+  camera_decoder
+  camera_viewer
   DESTINATION lib/${PROJECT_NAME})
 
 
