@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
 
     image_transport::ImageTransport transport(node);
     image_transport::Subscriber subscriber = transport.subscribe(base_topic, QUEUE_SIZE, std::bind(topic_callback, std::placeholders::_1, window_name));
-        
+
     rclcpp::spin(node);
 
     cv::destroyWindow(window_name);
