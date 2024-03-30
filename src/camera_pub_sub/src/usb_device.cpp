@@ -1,0 +1,64 @@
+#include "usb_device.h"
+
+// From https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
+std::string exec(const char* cmd) 
+{
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+
+    return result;
+}
+
+std::string get_usb_devices() {
+
+    std::string package_share_directory = ament_index_cpp::get_package_share_directory("camera_pub_sub");
+    std::string script_path = package_share_directory + "/resources/find_devpath.bash";
+
+    std::string command = "chmod +x " + script_path;
+    
+    system(command.c_str());
+    
+    return exec(script_path.c_str());
+}
+
+std::string get_device_path(std::string serial_ID)
+{
+    std::string device_list = get_usb_devices();
+
+    std::istringstream stream(device_list);
+    std::string line;
+    std::string delimiter = " - ";
+
+    std::string device_path_found = "";
+
+    while (std::getline(stream, line)) 
+    {
+        int delimiter_index = line.find(delimiter);
+
+        std::string device_path = line.substr(0, delimiter_index);
+        
+        // TEMP soln: get rid of odd numbered dev paths for /dev/video#
+        // odd numberes are for camera control rather than image output
+        if ((int(device_path[device_path.length() - 1]) - 48) % 2 == 1) {
+            continue;
+        }
+        
+        std::string serial_number = line.substr(delimiter_index + delimiter.length());
+
+        if (serial_number == serial_ID) 
+        {
+            device_path_found = device_path;
+        }
+    }
+
+    return device_path_found;
+}

@@ -10,9 +10,9 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'camera_name': 'camera1'},
-            {'device_index': 0},
-            {'image_width': 1920},
-            {'image_height': 1080},
+            {'serial_ID': "SunplusIT_Inc_HD_User_Facing"},
+            {'image_width': 1280},
+            {'image_height': 720},
             {'camera_fps': 30},
         ],
     )
