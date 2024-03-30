@@ -19,12 +19,12 @@ find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4 REQUIRED)
 
-find_package(PkgConfig REQUIRED)
+# find_package(PkgConfig REQUIRED)
 # pkg_check_modules(libusb REQUIRED libusb-1.0)
-pkg_check_modules(libudev REQUIRED libudev)
+# pkg_check_modules(libudev REQUIRED libudev)
 
 # Camera encoder
-add_executable(camera_encoder src/camera_encoder.cpp)
+add_executable(camera_encoder src/camera_encoder.cpp src/usb_device.cpp)
 ament_target_dependencies(camera_encoder rclcpp sensor_msgs image_transport cv_bridge OpenCV)
 
 # Camera decoder
@@ -35,15 +35,10 @@ ament_target_dependencies(camera_decoder rclcpp sensor_msgs image_transport cv_b
 add_executable(camera_viewer src/camera_viewer.cpp)
 ament_target_dependencies(camera_viewer rclcpp sensor_msgs image_transport cv_bridge OpenCV)
 
-# udev test
-add_executable(usb_test src/udev_test.cpp)
-ament_target_dependencies(usb_test rclcpp sensor_msgs image_transport cv_bridge OpenCV libudev)
-
 install(TARGETS
   camera_encoder
   camera_decoder
   camera_viewer
-  usb_test
   DESTINATION lib/${PROJECT_NAME})
 
 install(

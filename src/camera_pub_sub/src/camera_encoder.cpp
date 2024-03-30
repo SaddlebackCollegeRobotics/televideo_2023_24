@@ -9,6 +9,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/header.hpp"
 
+#include "usb_device.h"
+
 int main(int argc, char ** argv)
 {
     rclcpp::init(argc, argv);
@@ -17,17 +19,17 @@ int main(int argc, char ** argv)
     rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("camera_publisher", options);
 
     node->declare_parameter("camera_name", "camera1");
-    node->declare_parameter("device_index", 0);
+    node->declare_parameter("serial_ID", "");
     node->declare_parameter("image_width", 1280);
     node->declare_parameter("image_height", 720);
     node->declare_parameter("camera_fps", 30);
     node->declare_parameter("compression_format", "MJPG");
 
-    int device_index = node->get_parameter("device_index").as_int();
     int imageWidth = node->get_parameter("image_width").as_int();
     int imageHeight = node->get_parameter("image_height").as_int();
     int camera_fps = node->get_parameter("camera_fps").as_int();
 
+    std::string serial_ID = node->get_parameter("serial_ID").as_string();
     std::string compression_format = node->get_parameter("compression_format").as_string();
     std::string camera_name = node->get_parameter("camera_name").as_string();
 
@@ -36,9 +38,24 @@ int main(int argc, char ** argv)
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);
 
+    std::string device_path = get_device_path(serial_ID);
+
+    if (device_path.empty()) {
+        std::cout << "ERROR! Device not found: {name: "
+        << camera_name << ", serial_ID: " 
+        << serial_ID << "}" << std::endl;
+        return 1;
+    }
+    else
+    {
+        std::cout << "Device found: {name: "
+        << camera_name << ", device_path: " 
+        << device_path << "}" << std::endl;
+    }
+
     // GStreamer pipeline for capturing from the camera, used by OpenCV
     std::ostringstream gstreamer_api;
-    gstreamer_api << "v4l2src device=/dev/video" << device_index << " ! "
+    gstreamer_api << "v4l2src device=" << "/dev/video0" << " ! "
         << "image/jpeg,width=" << imageWidth << ","
         << "height=" << imageHeight << ","
         << "framerate=" << camera_fps << "/1,"
@@ -48,6 +65,8 @@ int main(int argc, char ** argv)
     cv::VideoCapture videoCapture(gstreamer_api.str(), cv::CAP_GSTREAMER);
 
     if (!videoCapture.isOpened()) {
+        std::cout << "ERROR! Unable to open camera: {name: "
+        << camera_name << "}" << std::endl;
         return 1;
     }
 
