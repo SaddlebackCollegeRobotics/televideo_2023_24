@@ -55,7 +55,7 @@ int main(int argc, char ** argv)
 
     // GStreamer pipeline for capturing from the camera, used by OpenCV
     std::ostringstream gstreamer_api;
-    gstreamer_api << "v4l2src device=" << "/dev/video2" << " ! "
+    gstreamer_api << "v4l2src device=" << device_path << " ! "
         << "image/jpeg,width=" << imageWidth << ","
         << "height=" << imageHeight << ","
         << "framerate=" << camera_fps << "/1,"
