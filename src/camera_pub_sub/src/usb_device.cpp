@@ -47,7 +47,7 @@ std::string get_device_path(std::string serial_ID)
         std::string device_path = line.substr(0, delimiter_index);
         
         // TEMP soln: get rid of odd numbered dev paths for /dev/video#
-        // odd numberes are for camera control rather than image output
+        // odd numbers are for camera control rather than image output
         if ((int(device_path[device_path.length() - 1]) - 48) % 2 == 1) {
             continue;
         }
