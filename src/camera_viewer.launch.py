@@ -3,21 +3,19 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-    camera_encoder = Node(
+    camera_viewer = Node(
         package='camera_pub_sub',
-        executable='camera_encoder',
-        name='camera1_enc',
+        executable='camera_viewer',
+        name='camera1_view',
         output='screen',
         parameters=[
             {'camera_name': 'camera1'},
-            {'serial_ID': "046d_C922_Pro_Stream_Webcam_F5B8DF8F"},
-            {'image_width': 1280},
-            {'image_height': 720},
-            {'camera_fps': 30},
+            {'window_width': 960},
+            {'window_height': 540}
         ],
     )
 
     return LaunchDescription([
-        camera_encoder
+        camera_viewer
     ])
 
