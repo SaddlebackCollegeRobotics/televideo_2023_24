@@ -10,7 +10,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'camera_name': 'camera1'},
-            {'serial_ID': "046d_C922_Pro_Stream_Webcam_F5B8DF8F"},
+            {'serial_ID': "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0001"},
             {'image_width': 1280},
             {'image_height': 720},
             {'camera_fps': 30},

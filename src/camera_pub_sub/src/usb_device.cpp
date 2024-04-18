@@ -37,6 +37,7 @@ std::string get_device_path(std::string serial_ID)
     std::istringstream stream(device_list);
     std::string line;
     std::string delimiter = " - ";
+    std::string keyword = "video";
 
     std::string device_path_found = "";
 
@@ -45,6 +46,12 @@ std::string get_device_path(std::string serial_ID)
         int delimiter_index = line.find(delimiter);
 
         std::string device_path = line.substr(0, delimiter_index);
+
+        size_t keyword_index = device_path.find(keyword);
+
+        // Get rid of device paths that are not video feeds
+        if (keyword_index == std::string::npos)
+            continue;
         
         // TEMP soln: get rid of odd numbered dev paths for /dev/video#
         // odd numbers are for camera control rather than image output
