@@ -53,10 +53,37 @@ def generate_launch_description():
         ],
     )
 
+    # CAMERA 3 --------------------------------------------
+
+    camera3_decoder = Node(
+        package='camera_pub_sub',
+        executable='camera_decoder',
+        name='camera3_dec',
+        output='screen',
+        parameters=[
+            {"camera_name": "camera3"},
+            {"image_transport": "compressed"},
+        ],
+    )
+
+    camera3_viewer = Node(
+        package='camera_pub_sub',
+        executable='camera_viewer',
+        name='camera3_view',
+        output='screen',
+        parameters=[
+            {'camera_name': 'camera3'},
+            {'window_width': 960},
+            {'window_height': 540}
+        ],
+    )
+
     return LaunchDescription([
         camera1_decoder,
         camera1_viewer,
         camera2_decoder,
         camera2_viewer,
+        camera3_decoder,
+        camera3_viewer,
     ])
 
