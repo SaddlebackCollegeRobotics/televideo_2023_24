@@ -54,15 +54,23 @@ int main(int argc, char ** argv)
     }
 
     // GStreamer pipeline for capturing from the camera, used by OpenCV
-    std::ostringstream gstreamer_api;
-    gstreamer_api << "v4l2src device=" << device_path << " ! "
+    std::ostringstream gstreamer_api_amd64;
+    gstreamer_api_amd64 << "v4l2src device=" << device_path << " ! "
         << "image/jpeg,width=" << imageWidth << ","
         << "height=" << imageHeight << ","
         << "framerate=" << camera_fps << "/1,"
         << "format=(string)" << compression_format << " ! "
         << "decodebin ! appsink";
 
-    cv::VideoCapture videoCapture(gstreamer_api.str(), cv::CAP_GSTREAMER);
+    std::ostringstream gstreamer_api_jetson;
+    gstreamer_api_jetson << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
+        << "image/jpeg,width=" << imageWidth << ","
+        << "height=" << imageHeight << ","
+        << "framerate=" << camera_fps << "/1 ! "
+        << "jpegdec" << " ! "
+       	<< "video/x-raw ! appsink";
+
+    cv::VideoCapture videoCapture(gstreamer_api_jetson.str(), cv::CAP_GSTREAMER);
 
     if (!videoCapture.isOpened()) {
         std::cout << "ERROR! Unable to open camera: {name: "
