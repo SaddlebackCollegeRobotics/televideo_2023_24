@@ -12,7 +12,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {"camera_name": "camera1"},
-            {"image_transport": "compressed"},
+            {"image_transport": "ffmpeg"},
         ],
     )
 
@@ -37,7 +37,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {"camera_name": "camera2"},
-            {"image_transport": "compressed"},
+            {"image_transport": "ffmpeg"},
         ],
     )
 
@@ -62,7 +62,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {"camera_name": "camera3"},
-            {"image_transport": "compressed"},
+            {"image_transport": "ffmpeg"},
         ],
     )
 
@@ -81,9 +81,9 @@ def generate_launch_description():
     return LaunchDescription([
         camera1_decoder,
         camera1_viewer,
-        camera2_decoder,
-        camera2_viewer,
-        camera3_decoder,
-        camera3_viewer,
+        #camera2_decoder,
+        #camera2_viewer,
+        #camera3_decoder,
+        #camera3_viewer,
     ])
 
