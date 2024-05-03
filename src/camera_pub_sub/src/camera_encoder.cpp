@@ -79,6 +79,7 @@ int main(int argc, char ** argv)
     }
 
     cv::Mat frame;
+    cv::Mat resizedFrame;
     std_msgs::msg::Header header;
     sensor_msgs::msg::Image::SharedPtr msg;
 
@@ -91,6 +92,7 @@ int main(int argc, char ** argv)
 
         if (!frame.empty()) 
         {
+            cv::resize(frame, resizedFrame, cv::Size(imageWidth, imageHeight));
             msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
             publisher.publish(msg);
             cv::waitKey(1);
