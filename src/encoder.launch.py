@@ -14,7 +14,6 @@ def generate_launch_description():
             {'image_width': 1280},
             {'image_height': 720},
             {'camera_fps': 30},
-
             {'camera1.transport.format': 'jpeg'},
             {'camera1.transport.jpeg_quality': 10}
 
