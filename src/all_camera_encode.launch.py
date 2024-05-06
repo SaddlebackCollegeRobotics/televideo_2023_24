@@ -15,7 +15,7 @@ def generate_launch_description():
             {'serial_ID': "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0001"},
             {'image_width': 1280},
             {'image_height': 720},
-            {'camera_fps': 30},
+            {'camera_fps': 20},
             {'camera1.transport.format': 'jpeg'},
             {'camera1.transport.jpeg_quality': 10}
         ],
@@ -33,7 +33,7 @@ def generate_launch_description():
             {'serial_ID': "16MP_Camera_Mamufacture_16MP_USB_Camera_2022050701"},
             {'image_width': 1280},
             {'image_height': 720},
-            {'camera_fps': 30},
+            {'camera_fps': 20},
             {'camera2.transport.format': 'jpeg'},
             {'camera2.transport.jpeg_quality': 10}
         ],
@@ -51,7 +51,7 @@ def generate_launch_description():
             {'serial_ID': "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0002"},
             {'image_width': 1280},
             {'image_height': 720},
-            {'camera_fps': 30},
+            {'camera_fps': 20},
             {'camera3.transport.format': 'jpeg'},
             {'camera3.transport.jpeg_quality': 10}
         ],
@@ -60,6 +60,6 @@ def generate_launch_description():
     return LaunchDescription([
         camera1_encoder,
         camera2_encoder,
-        # camera3_encoder,
+        camera3_encoder,
     ])
 

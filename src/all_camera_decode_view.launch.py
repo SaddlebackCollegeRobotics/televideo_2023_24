@@ -83,7 +83,7 @@ def generate_launch_description():
         camera1_viewer,
         camera2_decoder,
         camera2_viewer,
-        #camera3_decoder,
-        #camera3_viewer,
+        camera3_decoder,
+        camera3_viewer,
     ])
 
