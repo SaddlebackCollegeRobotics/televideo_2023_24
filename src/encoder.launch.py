@@ -11,13 +11,16 @@ def generate_launch_description():
         parameters=[
             {'camera_name': 'camera1'},
             {'serial_ID': "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0001"},
-            {'image_width': 1280},
-            {'image_height': 720},
-            {'camera_fps': 30},
+            {'camera_cap_width': 1280},
+            {'camera_cap_height': 720},
+            {'camera_cap_fps': 30},
+            {'image_send_width': 50},
+            {'image_send_height': 50},
+            {'image_send_fps': 30},
+            {'auto_enable_camera': False},
+            {'host_machine': 'amd64'},
             {'camera1.transport.format': 'jpeg'},
             {'camera1.transport.jpeg_quality': 10}
-
-
         ],
     )
 
