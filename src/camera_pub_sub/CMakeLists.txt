@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4 REQUIRED)
@@ -25,7 +26,7 @@ find_package(OpenCV 4 REQUIRED)
 
 # Camera encoder
 add_executable(camera_encoder src/camera_encoder.cpp src/usb_device.cpp)
-ament_target_dependencies(camera_encoder rclcpp sensor_msgs image_transport cv_bridge OpenCV)
+ament_target_dependencies(camera_encoder rclcpp sensor_msgs std_srvs image_transport cv_bridge OpenCV)
 
 # Camera decoder
 add_executable(camera_decoder src/camera_decoder.cpp)
@@ -35,10 +36,16 @@ ament_target_dependencies(camera_decoder rclcpp sensor_msgs image_transport cv_b
 add_executable(camera_viewer src/camera_viewer.cpp)
 ament_target_dependencies(camera_viewer rclcpp sensor_msgs image_transport cv_bridge OpenCV)
 
+# Camera toggle tester
+add_executable(camera_toggle_test src/camera_toggle_test.cpp)
+ament_target_dependencies(camera_toggle_test rclcpp std_srvs)
+
+
 install(TARGETS
   camera_encoder
   camera_decoder
   camera_viewer
+  camera_toggle_test
   DESTINATION lib/${PROJECT_NAME})
 
 install(

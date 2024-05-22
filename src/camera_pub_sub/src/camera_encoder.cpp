@@ -70,8 +70,10 @@ int main(int argc, char ** argv)
     node->declare_parameter("image_send_height", 480);
     node->declare_parameter("image_send_fps", 5);
 
-    node->declare_parameter("autostart_camera", false);
+    node->declare_parameter("auto_enable_camera", false);
     node->declare_parameter("compression_format", "MJPG");
+
+    // Currently implemented: amd64, jetson
     node->declare_parameter("host_machine", "jetson");
 
     int cameraCapWidth = node->get_parameter("camera_cap_width").as_int();
@@ -91,13 +93,14 @@ int main(int argc, char ** argv)
     std::string hostMachine = node->get_parameter("host_machine").as_string();
 
     std::string base_topic = camera_name + "/transport";
+    std::string toggle_service_name = camera_name + "/toggle_camera";
 
     // TODO - Switch to image_transport::CameraPublisher to get access to qos
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);
 
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr toggle_camera_srv = 
-    node->create_service<std_srvs::srv::SetBool>("toggle_camera", &toggle_camera_srv_process);
+    node->create_service<std_srvs::srv::SetBool>(toggle_service_name, &toggle_camera_srv_process);
 
     std::string device_path = get_device_path(serial_ID);
 
@@ -160,7 +163,7 @@ int main(int argc, char ** argv)
             if (!frame.empty()) 
             {
                 cv::resize(frame, resizedFrame, cv::Size(imageSendWidth, imageSendHeight), 0.0, 0.0, cv::INTER_AREA);
-                msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
+                msg = cv_bridge::CvImage(header, "bgr8", resizedFrame).toImageMsg();
                 publisher.publish(msg);
             }
         }
