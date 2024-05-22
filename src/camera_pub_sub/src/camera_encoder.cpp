@@ -8,8 +8,46 @@
 #include "opencv2/videoio.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/header.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 #include "usb_device.h"
+
+
+std::ostringstream gstreamer_api_jetson;
+cv::VideoCapture videoCapture;
+std::string camera_name;
+
+bool toggle_camera(bool enableCamera)
+{   
+    bool success = true;
+
+    if (enableCamera)
+    {
+        if (!videoCapture.isOpened())
+        {
+            success = videoCapture.open(gstreamer_api_jetson.str(), cv::CAP_GSTREAMER);
+        }
+    }
+    else
+    {
+        if (videoCapture.isOpened())
+        {
+            videoCapture.release();
+
+            if (videoCapture.isOpened())
+                success = false;
+        }
+        
+    }
+
+    return success;
+}
+
+void toggle_camera_srv_process(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+          std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+{
+    response->success = toggle_camera(request->data);
+}
 
 int main(int argc, char ** argv)
 {
@@ -32,6 +70,8 @@ int main(int argc, char ** argv)
     node->declare_parameter("image_send_height", 480);
     node->declare_parameter("image_send_fps", 5);
 
+    node->declare_parameter("autostart_camera", false);
+
     node->declare_parameter("compression_format", "MJPG");
 
     int cameraCapWidth = node->get_parameter("camera_cap_width").as_int();
@@ -42,14 +82,20 @@ int main(int argc, char ** argv)
     int imageSendHeight = node->get_parameter("image_send_height").as_int();
     int imageSendFPS = node->get_parameter("image_send_fps").as_int();
 
+    bool autoEnableCamera = node->get_parameter("auto_enable_camera").as_bool();
+
     std::string serial_ID = node->get_parameter("serial_ID").as_string();
     std::string compression_format = node->get_parameter("compression_format").as_string();
-    std::string camera_name = node->get_parameter("camera_name").as_string();
+    camera_name = node->get_parameter("camera_name").as_string();
 
     std::string base_topic = camera_name + "/transport";
 
+    // TODO - Switch to image_transport::CameraPublisher to get access to qos
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);
+
+    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr toggle_camera_srv = 
+    node->create_service<std_srvs::srv::SetBool>("toggle_camera", &toggle_camera_srv_process);
 
     std::string device_path = get_device_path(serial_ID);
 
@@ -76,7 +122,6 @@ int main(int argc, char ** argv)
     //     << "decodebin ! appsink";
 
     // GStreamer pipeline for capturing from the camera, used by OpenCV (Jetson)
-    std::ostringstream gstreamer_api_jetson;
     gstreamer_api_jetson << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
         << "image/jpeg,width=" << cameraCapWidth << ","
         << "height=" << cameraCapHeight << ","
@@ -84,12 +129,13 @@ int main(int argc, char ** argv)
         << "jpegdec" << " ! "
        	<< "video/x-raw ! appsink";
 
-    cv::VideoCapture videoCapture(gstreamer_api_jetson.str(), cv::CAP_GSTREAMER);
-
-    if (!videoCapture.isOpened()) {
-        std::cout << "ERROR! Unable to open camera: {name: "
-        << camera_name << "}" << std::endl;
-        return 1;
+    if (autoEnableCamera)
+    {
+        if (!toggle_camera(true))
+        {
+            std::cout << "ERROR! Unable to open camera: {name: "
+            << camera_name << "}" << std::endl;
+        }
     }
 
     cv::Mat frame;
@@ -102,15 +148,18 @@ int main(int argc, char ** argv)
 
     while (rclcpp::ok()) 
     {
-        videoCapture >> frame;
-
-        if (!frame.empty()) 
+        if (videoCapture.isOpened())
         {
-            cv::resize(frame, resizedFrame, cv::Size(imageSendWidth, imageSendHeight), 0.0, 0.0, cv::INTER_AREA);
-            msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
-            publisher.publish(msg);
-        }
+            videoCapture >> frame;
 
+            if (!frame.empty()) 
+            {
+                cv::resize(frame, resizedFrame, cv::Size(imageSendWidth, imageSendHeight), 0.0, 0.0, cv::INTER_AREA);
+                msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
+                publisher.publish(msg);
+            }
+        }
+        
         rclcpp::spin_some(node);
         loop_rate.sleep();
     }
