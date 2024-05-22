@@ -20,14 +20,27 @@ int main(int argc, char ** argv)
 
     node->declare_parameter("camera_name", "camera1");
     node->declare_parameter("serial_ID", "");
-    node->declare_parameter("image_width", 1280);
-    node->declare_parameter("image_height", 720);
-    node->declare_parameter("camera_fps", 30);
+
+    // Must be supported by physical camera device.
+    node->declare_parameter("camera_cap_width", 1280);
+    node->declare_parameter("camera_cap_height", 720);
+    node->declare_parameter("camera_cap_fps", 30);
+
+    // Ability to resize to something custom before sending.
+    // These values should be equal to or less than camera_cap parameters.
+    node->declare_parameter("image_send_width", 640);
+    node->declare_parameter("image_send_height", 480);
+    node->declare_parameter("image_send_fps", 5);
+
     node->declare_parameter("compression_format", "MJPG");
 
-    int imageWidth = node->get_parameter("image_width").as_int();
-    int imageHeight = node->get_parameter("image_height").as_int();
-    int camera_fps = node->get_parameter("camera_fps").as_int();
+    int cameraCapWidth = node->get_parameter("camera_cap_width").as_int();
+    int cameraCapHeight = node->get_parameter("camera_cap_height").as_int();
+    int cameraCapFPS = node->get_parameter("camera_cap_fps").as_int();
+
+    int imageSendWidth = node->get_parameter("image_send_width").as_int();
+    int imageSendHeight = node->get_parameter("image_send_height").as_int();
+    int imageSendFPS = node->get_parameter("image_send_fps").as_int();
 
     std::string serial_ID = node->get_parameter("serial_ID").as_string();
     std::string compression_format = node->get_parameter("compression_format").as_string();
@@ -53,20 +66,21 @@ int main(int argc, char ** argv)
         << device_path << "}" << std::endl;
     }
 
-    // GStreamer pipeline for capturing from the camera, used by OpenCV
-    std::ostringstream gstreamer_api_amd64;
-    gstreamer_api_amd64 << "v4l2src device=" << device_path << " ! "
-        << "image/jpeg,width=" << imageWidth << ","
-        << "height=" << imageHeight << ","
-        << "framerate=" << camera_fps << "/1,"
-        << "format=(string)" << compression_format << " ! "
-        << "decodebin ! appsink";
+    // GStreamer pipeline for capturing from the camera, used by OpenCV (amd64)
+    // std::ostringstream gstreamer_api_amd64;
+    // gstreamer_api_amd64 << "v4l2src device=" << device_path << " ! "
+    //     << "image/jpeg,width=" << cameraCapWidth << ","
+    //     << "height=" << cameraCapHeight << ","
+    //     << "framerate=" << cameraCapFPS << "/1,"
+    //     << "format=(string)" << compression_format << " ! "
+    //     << "decodebin ! appsink";
 
+    // GStreamer pipeline for capturing from the camera, used by OpenCV (Jetson)
     std::ostringstream gstreamer_api_jetson;
     gstreamer_api_jetson << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
-        << "image/jpeg,width=" << imageWidth << ","
-        << "height=" << imageHeight << ","
-        << "framerate=" << camera_fps << "/1 ! "
+        << "image/jpeg,width=" << cameraCapWidth << ","
+        << "height=" << cameraCapHeight << ","
+        << "framerate=" << cameraCapFPS << "/1 ! "
         << "jpegdec" << " ! "
        	<< "video/x-raw ! appsink";
 
@@ -84,7 +98,7 @@ int main(int argc, char ** argv)
     sensor_msgs::msg::Image::SharedPtr msg;
 
     // This is in Hz
-    rclcpp::WallRate loop_rate(camera_fps);
+    rclcpp::WallRate loop_rate(imageSendFPS);
 
     while (rclcpp::ok()) 
     {
@@ -92,10 +106,9 @@ int main(int argc, char ** argv)
 
         if (!frame.empty()) 
         {
-            cv::resize(frame, resizedFrame, cv::Size(imageWidth, imageHeight));
+            cv::resize(frame, resizedFrame, cv::Size(imageSendWidth, imageSendHeight), 0.0, 0.0, cv::INTER_AREA);
             msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
             publisher.publish(msg);
-            cv::waitKey(1);
         }
 
         rclcpp::spin_some(node);
