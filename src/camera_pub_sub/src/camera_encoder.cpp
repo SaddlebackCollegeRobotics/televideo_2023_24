@@ -13,7 +13,7 @@
 #include "usb_device.h"
 
 
-std::ostringstream gstreamer_api_jetson;
+std::ostringstream gstreamer_api;
 cv::VideoCapture videoCapture;
 std::string camera_name;
 
@@ -25,7 +25,7 @@ bool toggle_camera(bool enableCamera)
     {
         if (!videoCapture.isOpened())
         {
-            success = videoCapture.open(gstreamer_api_jetson.str(), cv::CAP_GSTREAMER);
+            success = videoCapture.open(gstreamer_api.str(), cv::CAP_GSTREAMER);
         }
     }
     else
@@ -71,8 +71,8 @@ int main(int argc, char ** argv)
     node->declare_parameter("image_send_fps", 5);
 
     node->declare_parameter("autostart_camera", false);
-
     node->declare_parameter("compression_format", "MJPG");
+    node->declare_parameter("host_machine", "jetson");
 
     int cameraCapWidth = node->get_parameter("camera_cap_width").as_int();
     int cameraCapHeight = node->get_parameter("camera_cap_height").as_int();
@@ -87,6 +87,8 @@ int main(int argc, char ** argv)
     std::string serial_ID = node->get_parameter("serial_ID").as_string();
     std::string compression_format = node->get_parameter("compression_format").as_string();
     camera_name = node->get_parameter("camera_name").as_string();
+
+    std::string hostMachine = node->get_parameter("host_machine").as_string();
 
     std::string base_topic = camera_name + "/transport";
 
@@ -112,22 +114,25 @@ int main(int argc, char ** argv)
         << device_path << "}" << std::endl;
     }
 
-    // GStreamer pipeline for capturing from the camera, used by OpenCV (amd64)
-    // std::ostringstream gstreamer_api_amd64;
-    // gstreamer_api_amd64 << "v4l2src device=" << device_path << " ! "
-    //     << "image/jpeg,width=" << cameraCapWidth << ","
-    //     << "height=" << cameraCapHeight << ","
-    //     << "framerate=" << cameraCapFPS << "/1,"
-    //     << "format=(string)" << compression_format << " ! "
-    //     << "decodebin ! appsink";
-
-    // GStreamer pipeline for capturing from the camera, used by OpenCV (Jetson)
-    gstreamer_api_jetson << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
+    // GStreamer pipeline for capturing from the camera, used by OpenCV
+    if (hostMachine == "jetson")
+    {
+        gstreamer_api << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
         << "image/jpeg,width=" << cameraCapWidth << ","
         << "height=" << cameraCapHeight << ","
         << "framerate=" << cameraCapFPS << "/1 ! "
         << "jpegdec" << " ! "
        	<< "video/x-raw ! appsink";
+    }
+    else if (hostMachine == "amd64")
+    {
+        gstreamer_api << "v4l2src device=" << device_path << " ! "
+        << "image/jpeg,width=" << cameraCapWidth << ","
+        << "height=" << cameraCapHeight << ","
+        << "framerate=" << cameraCapFPS << "/1,"
+        << "format=(string)" << compression_format << " ! "
+        << "decodebin ! appsink";
+    }
 
     if (autoEnableCamera)
     {
