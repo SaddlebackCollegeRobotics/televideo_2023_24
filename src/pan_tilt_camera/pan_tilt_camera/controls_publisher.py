@@ -2,22 +2,20 @@ import rclpy
 from rclpy.node import Node
 from numpy import clip
 
-# Import the String message type. (Other types are available in the same way.)
 from std_msgs.msg import Int64MultiArray
 from ament_index_python.packages import get_package_share_directory
 
-
 from . import gamepad_input as gmi
 
-class MinimalPublisher(Node):
+
+class ControlsPublisher(Node):
 
     def __init__(self):
 
         # Give the node a name.
-        super().__init__('minimal_publisher')
+        super().__init__('controls_publisher')
 
-        # Specify data type and topic name. Specify queue size (limit amount of queued messages)
-        self.publisher_ = self.create_publisher(Int64MultiArray, '/telecom/pan_tilt_control', 10)
+        self.publisher_ = self.create_publisher(Int64MultiArray, '/telecom/pan_tilt_control', 1)
 
         self.msg = Int64MultiArray()
 
@@ -32,7 +30,7 @@ class MinimalPublisher(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         self.AXIS_DEADZONE = 0.1
-        gmi.setConfigFile(get_package_share_directory('py_pubsub') + '/gamepads.config')
+        gmi.setConfigFile(get_package_share_directory('pan_tilt_camera') + '/gamepads.config')
         gmi.run_event_loop()
 
     def timer_callback(self):
@@ -53,8 +51,6 @@ class MinimalPublisher(Node):
             self.current_pitch = clip(self.current_pitch, self.pitch_range[0], self.pitch_range[1])
             self.current_yaw = clip(self.current_yaw, self.yaw_range[0], self.yaw_range[1])
 
-            print(self.current_pitch, self.current_yaw)
-
             self.msg.data = [int(self.current_pitch), int(self.current_yaw)]
 
             self.publisher_.publish(self.msg)
@@ -63,14 +59,11 @@ class MinimalPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher()
+    controls_publisher = ControlsPublisher()
 
-    rclpy.spin(minimal_publisher)
+    rclpy.spin(controls_publisher)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    minimal_publisher.destroy_node()
+    controls_publisher.destroy_node()
     rclpy.shutdown()
 
 
