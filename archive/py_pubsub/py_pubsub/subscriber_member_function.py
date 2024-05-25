@@ -1,9 +1,12 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import String, Int64MultiArray
-from serial import Serial, SerialException
+from sensor_msgs.msg import CompressedImage
 
+import cv2
+from cv_bridge import CvBridge
+
+from rclpy.qos import qos_profile_sensor_data
 
 class MinimalSubscriber(Node):
 
@@ -12,24 +15,30 @@ class MinimalSubscriber(Node):
         # Give the node a name.
         super().__init__('minimal_subscriber')
 
-        try:
-            self.serial = Serial('/dev/ttyUSB0', 9600)
-        except SerialException:
-            print("Error: Could not open serial port!")
-            exit(0)
-
         # Subscribe to the topic 'topic'. Callback gets called when a message is received.
         self.subscription = self.create_subscription(
-            Int64MultiArray,
-            '/telecom/pan_tilt_control',
+            CompressedImage,
+            '/image_raw',
             self.listener_callback,
-            10)
+            qos_profile_sensor_data)
         self.subscription  # prevent unused variable warning
 
-    # This callback definition simply prints an info message to the console, along with the data it received. 
+        WINDOW_SIZE = (1920, 1080)
+
+        cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('frame', WINDOW_SIZE[0], WINDOW_SIZE[1])
+
+        self._bridge = CvBridge()
+
+
     def listener_callback(self, msg):
-        serial_input = str(msg.data[0]) + ',' + str(msg.data[1]) + '\0'
-        self.serial.write(serial_input.encode())
+
+        frame = self._bridge.compressed_imgmsg_to_cv2(msg)
+
+        cv2.imshow('frame', frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            quit()
 
 
 def main(args=None):

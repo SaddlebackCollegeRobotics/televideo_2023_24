@@ -1,80 +1,76 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import CompressedImage
-from rclpy.qos import qos_profile_sensor_data
+from numpy import clip
+
+# Import the String message type. (Other types are available in the same way.)
+from std_msgs.msg import Int64MultiArray
+from ament_index_python.packages import get_package_share_directory
 
 
-import cv2
-from cv_bridge import CvBridge
+from . import gamepad_input as gmi
 
-from time import sleep
-
-
-class CameraPublisher(Node):
+class MinimalPublisher(Node):
 
     def __init__(self):
 
         # Give the node a name.
-        super().__init__('camera_publisher')
+        super().__init__('minimal_publisher')
 
-        self.declare_parameter('device_path', '/dev/video0')
-        self.declare_parameter('image_size', (1920, 1080))
-        self.declare_parameter('camera_fps', 30)
-        self.declare_parameter('compression_format', 'MJPG')
-        self.declare_parameter('topic_name', '/image_raw/compressed')
+        # Specify data type and topic name. Specify queue size (limit amount of queued messages)
+        self.publisher_ = self.create_publisher(Int64MultiArray, '/telecom/pan_tilt_control', 10)
 
-        device_path = self.get_parameter('device_path').get_parameter_value().string_value
-        image_size = self.get_parameter('image_size').get_parameter_value().integer_array_value
-        camera_fps = self.get_parameter('camera_fps').get_parameter_value().integer_value
-        compression_format = self.get_parameter('compression_format').get_parameter_value().string_value
-        topic_name = self.get_parameter('topic_name').get_parameter_value().string_value
+        self.msg = Int64MultiArray()
 
-        self.publisher_ = self.create_publisher(CompressedImage, topic_name, qos_profile_sensor_data)
+        self.current_pitch = 90
+        self.current_yaw = 90
+        self.speed_factor = 3
 
-        self._bridge = CvBridge()
+        self.pitch_range = (51, 184)
+        self.yaw_range = (5, 183)
 
-        # Define the GStreamer pipeline for the camera
-        gstreamer_api=f"v4l2src device={device_path} ! \
-            image/jpeg,\
-            width={image_size[0]},\
-            height={image_size[1]},\
-            framerate={camera_fps}/1,\
-            format=(string){compression_format} ! \
-            decodebin ! appsink"
-
-        self.cap = cv2.VideoCapture(gstreamer_api, cv2.CAP_GSTREAMER)
-
-        if not self.cap.isOpened():
-            print("Error: Could not open camera.")
-            exit(1)
-
-        timer_period = 1/camera_fps  # seconds
+        timer_period = 1/10  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
+        self.AXIS_DEADZONE = 0.1
+        gmi.setConfigFile(get_package_share_directory('py_pubsub') + '/gamepads.config')
+        gmi.run_event_loop()
 
     def timer_callback(self):
 
-        msg = CompressedImage()
+        gamepad = gmi.getGamepad(0)
 
-        success, frame = self.cap.read()
+        # Trigger press acts as a safety switch as well as a workaround
+        # for a pygame bug that causes specifically 8bitdo controllers to
+        # register a constant input of 1.0 and -1.0 on joystick axes, when
+        # unplugged and plugged back in.
+        # Trigger also acts as a safety button for system.
+        if gamepad != None and gmi.getTriggers(gamepad, self.AXIS_DEADZONE)[1] > 0:
+            (x_hat, y_hat) = gmi.getHat(gamepad)
 
-        if success:
-            msg = self._bridge.cv2_to_compressed_imgmsg(frame)
-            print("Publishing frame")
-            self.publisher_.publish(msg)
-        else:
-            print("Error reading frame")
-            sleep(1)
+            self.current_pitch += -y_hat * self.speed_factor
+            self.current_yaw += x_hat * self.speed_factor
+
+            self.current_pitch = clip(self.current_pitch, self.pitch_range[0], self.pitch_range[1])
+            self.current_yaw = clip(self.current_yaw, self.yaw_range[0], self.yaw_range[1])
+
+            print(self.current_pitch, self.current_yaw)
+
+            self.msg.data = [int(self.current_pitch), int(self.current_yaw)]
+
+            self.publisher_.publish(self.msg)
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    camera_publisher = CameraPublisher()
+    minimal_publisher = MinimalPublisher()
 
-    rclpy.spin(camera_publisher)
+    rclpy.spin(minimal_publisher)
 
-    camera_publisher.destroy_node()
+    # Destroy the node explicitly
+    # (optional - otherwise it will be done automatically
+    # when the garbage collector destroys the node object)
+    minimal_publisher.destroy_node()
     rclpy.shutdown()
 
 
