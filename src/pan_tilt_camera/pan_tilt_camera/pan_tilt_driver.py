@@ -1,16 +1,16 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import String, Int64MultiArray
+from std_msgs.msg import Int64MultiArray
 from serial import Serial, SerialException
 
 
-class MinimalSubscriber(Node):
+class PanTiltDriver(Node):
 
     def __init__(self):
 
         # Give the node a name.
-        super().__init__('minimal_subscriber')
+        super().__init__('servo_driver')
 
         try:
             self.serial = Serial('/dev/ttyUSB0', 9600)
@@ -18,15 +18,13 @@ class MinimalSubscriber(Node):
             print("Error: Could not open serial port!")
             exit(0)
 
-        # Subscribe to the topic 'topic'. Callback gets called when a message is received.
         self.subscription = self.create_subscription(
             Int64MultiArray,
             '/telecom/pan_tilt_control',
             self.listener_callback,
-            10)
+            1)
         self.subscription  # prevent unused variable warning
 
-    # This callback definition simply prints an info message to the console, along with the data it received. 
     def listener_callback(self, msg):
         serial_input = str(msg.data[0]) + ',' + str(msg.data[1]) + '\0'
         self.serial.write(serial_input.encode())
@@ -35,14 +33,11 @@ class MinimalSubscriber(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_subscriber = MinimalSubscriber()
+    pan_tilt_driver = PanTiltDriver()
 
-    rclpy.spin(minimal_subscriber)
+    rclpy.spin(pan_tilt_driver)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    minimal_subscriber.destroy_node()
+    pan_tilt_driver.destroy_node()
     rclpy.shutdown()
 
 

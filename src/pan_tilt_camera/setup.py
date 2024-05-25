@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'py_pubsub'
+package_name = 'pan_tilt_camera'
 
 setup(
     name=package_name,
@@ -22,8 +22,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = py_pubsub.publisher_member_function:main',
-            'listener = py_pubsub.subscriber_member_function:main',
+            'talker = pan_tilt_camera.controls_publisher:main',
+            'listener = pan_tilt_camera.pan_tilt_driver:main',
         ],
     },
 )
