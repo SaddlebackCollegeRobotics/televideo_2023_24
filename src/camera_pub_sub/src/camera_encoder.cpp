@@ -40,6 +40,12 @@ bool toggle_camera(bool enableCamera)
         
     }
 
+    if (!success)
+    {
+        std::cout << "ERROR! Unable to open camera: {name: "
+        << camera_name << "}" << std::endl;
+    }
+
     return success;
 }
 
@@ -48,6 +54,12 @@ void toggle_camera_srv_process(const std::shared_ptr<std_srvs::srv::SetBool::Req
 {
     response->success = toggle_camera(request->data);
 }
+
+// void request_image_srv_process(const std::shared_ptr<std_srvs::srv::> request,
+//           std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+// {
+
+// }
 
 int main(int argc, char ** argv)
 {
@@ -139,11 +151,7 @@ int main(int argc, char ** argv)
 
     if (autoEnableCamera)
     {
-        if (!toggle_camera(true))
-        {
-            std::cout << "ERROR! Unable to open camera: {name: "
-            << camera_name << "}" << std::endl;
-        }
+        toggle_camera(true);
     }
 
     cv::Mat frame;
