@@ -1,3 +1,5 @@
+// By Aaron Lee @aaronHlee
+
 #include <Servo.h>
 
 String command;
