@@ -83,5 +83,6 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/scrobotics/workspaces/televideo_2023_24/src/camera_pub_sub"
 }
