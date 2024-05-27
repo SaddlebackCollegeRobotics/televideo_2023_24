@@ -1,5 +1,7 @@
 #include <sstream>  
 #include <string.h>
+#include <string>
+#include <vector>
 
 #include "cv_bridge/cv_bridge.h"
 #include "image_transport/image_transport.hpp"
@@ -20,69 +22,61 @@ std::string camera_name;
 std::string device_path;
 std::string compression_format;
 
-bool change_camera_resolution(int image_width, int image_height)
+struct ResolutionData
 {
+    int width = 0;
+    int height = 0;
+};
+
+static std::vector<ResolutionData> get_supported_resolutions()
+{
+    std::vector<ResolutionData> result;
+
     // Get supported camera resolutions
     std::string command = "v4l2-ctl -d /dev/video0 --list-formats-ext";
     std::string resolution_list = exec(command.c_str());
 
-    std::istringstream stream(resolution_list);
+    std::stringstream stream(resolution_list);
     std::string line;
     std::string endword = "]:";
     std::string keyword = "Size";
-    std::string resolution_delim = "x";
+    std::string resolution_sep = "x";
 
     std::string device_path_found = "";
     size_t start_index = std::string::npos;
 
     while (std::getline(stream, line)) 
     {
+        // Iterate until the correct device is found.
         if (start_index == std::string::npos)
         {
             //Find start index
             start_index = line.find(compression_format);
+            continue;
         }
-        else
+
+        // Compression format has been found. Remaining lines are resolution specs or FPS
+        
+        // Skip fps lines
+        if (line.find("fps"))
         {
-            // Get supported resolutions until end index
-            
-            size_t end_index = line.find(endword);
-
-            if (end_index != std::string::npos)
-                break;
-
-            size_t resolution_index = line.find(keyword);
-
-            if (resolution_index == std::string::npos)
-                continue;
-
-            size_t res_delim_index == line.find(resolution_delim);
-
-            std::string left_side = line.substr(0, res_delim_index);
-            std::string right_side = stoi(line.substr(res_delim_index + 1);
-            // TODO
-            
-
-            
-
-
-
-
-
-
-
+            continue;
         }
+
+        auto sep_pos = line.find(resolution_sep);
+
+        // Left num starting pos: ending at 'x', beginning at the last ' ' before.
+        auto left_num_str = line.substr(0, sep_pos);
+        left_num_str = left_num_str.substr(left_num_str.rfind(' ') + 1);
+
+        // Right num starting pos: beginning after 'x' until '\n'
+        auto right_num_str = line.substr(sep_pos);
+
+        result.push_back(ResolutionData{std::stoi(left_num_str), std::stoi(right_num_str)});
+            
     }
 
-
-        std::string device_path = line.substr(0, delimiter_index);
-
-        size_t keyword_index = device_path.find(keyword);
-
-        // Get rid of device paths that are not video feeds
-        if (keyword_index == std::string::npos)
-            continue;
-
+    return result;
 }
 
 bool toggle_camera(bool enableCamera)
