@@ -1,5 +1,4 @@
-#ifndef USB_DEVICE_H
-#define USB_DEVICE_H
+#pragma once
 
 #include <cstdio>
 #include <iostream>
@@ -10,11 +9,8 @@
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <sstream>
 #include <cstring>
-
-std::string exec(const char* cmd);
+#include "helper_functions.h"
 
 std::string get_usb_devices();
 
 std::string get_device_path(std::string serial_ID);
-
-#endif // USB_DEVICE_H

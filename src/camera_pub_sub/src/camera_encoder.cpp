@@ -9,6 +9,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+#include "std_srvs/srv/trigger.hpp"
 
 #include "usb_device.h"
 
@@ -16,6 +17,73 @@
 std::ostringstream gstreamer_api;
 cv::VideoCapture videoCapture;
 std::string camera_name;
+std::string device_path;
+std::string compression_format;
+
+bool change_camera_resolution(int image_width, int image_height)
+{
+    // Get supported camera resolutions
+    std::string command = "v4l2-ctl -d /dev/video0 --list-formats-ext";
+    std::string resolution_list = exec(command.c_str());
+
+    std::istringstream stream(resolution_list);
+    std::string line;
+    std::string endword = "]:";
+    std::string keyword = "Size";
+    std::string resolution_delim = "x";
+
+    std::string device_path_found = "";
+    size_t start_index = std::string::npos;
+
+    while (std::getline(stream, line)) 
+    {
+        if (start_index == std::string::npos)
+        {
+            //Find start index
+            start_index = line.find(compression_format);
+        }
+        else
+        {
+            // Get supported resolutions until end index
+            
+            size_t end_index = line.find(endword);
+
+            if (end_index != std::string::npos)
+                break;
+
+            size_t resolution_index = line.find(keyword);
+
+            if (resolution_index == std::string::npos)
+                continue;
+
+            size_t res_delim_index == line.find(resolution_delim);
+
+            std::string left_side = line.substr(0, res_delim_index);
+            std::string right_side = stoi(line.substr(res_delim_index + 1);
+            // TODO
+            
+
+            
+
+
+
+
+
+
+
+        }
+    }
+
+
+        std::string device_path = line.substr(0, delimiter_index);
+
+        size_t keyword_index = device_path.find(keyword);
+
+        // Get rid of device paths that are not video feeds
+        if (keyword_index == std::string::npos)
+            continue;
+
+}
 
 bool toggle_camera(bool enableCamera)
 {   
@@ -55,11 +123,11 @@ void toggle_camera_srv_process(const std::shared_ptr<std_srvs::srv::SetBool::Req
     response->success = toggle_camera(request->data);
 }
 
-// void request_image_srv_process(const std::shared_ptr<std_srvs::srv::> request,
-//           std::shared_ptr<std_srvs::srv::SetBool::Response> response)
-// {
-
-// }
+void request_image_srv_process(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+          std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+        
+}
 
 int main(int argc, char ** argv)
 {
@@ -99,22 +167,26 @@ int main(int argc, char ** argv)
     bool autoEnableCamera = node->get_parameter("auto_enable_camera").as_bool();
 
     std::string serial_ID = node->get_parameter("serial_ID").as_string();
-    std::string compression_format = node->get_parameter("compression_format").as_string();
+    compression_format = node->get_parameter("compression_format").as_string();
     camera_name = node->get_parameter("camera_name").as_string();
 
     std::string hostMachine = node->get_parameter("host_machine").as_string();
 
     std::string base_topic = camera_name + "/transport";
-    std::string toggle_service_name = camera_name + "/toggle_camera";
+    std::string toggle_srv_name = camera_name + "/toggle_camera";
+    std::string request_image_srv_name = camera_name + "/request_image";
 
     // TODO - Switch to image_transport::CameraPublisher to get access to qos
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);
 
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr toggle_camera_srv = 
-    node->create_service<std_srvs::srv::SetBool>(toggle_service_name, &toggle_camera_srv_process);
+    node->create_service<std_srvs::srv::SetBool>(toggle_srv_name, &toggle_camera_srv_process);
 
-    std::string device_path = get_device_path(serial_ID);
+    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr request_image_srv = 
+    node->create_service<std_srvs::srv::SetBool>(request_image_srv_name, &request_image_srv_process);
+
+    device_path = get_device_path(serial_ID);
 
     if (device_path.empty()) {
         std::cout << "ERROR! Device not found: {name: "
@@ -123,7 +195,7 @@ int main(int argc, char ** argv)
         return 1;
     }
     else
-    {
+    {   
         std::cout << "Device found: {name: "
         << camera_name << ", device_path: " 
         << device_path << "}" << std::endl;
