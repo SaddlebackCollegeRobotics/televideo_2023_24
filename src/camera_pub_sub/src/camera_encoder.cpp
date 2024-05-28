@@ -174,11 +174,11 @@ int main(int argc, char ** argv)
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);
 
-    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr toggle_camera_srv = 
+    auto toggle_camera_srv = 
     node->create_service<std_srvs::srv::SetBool>(toggle_srv_name, &toggle_camera_srv_process);
 
-    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr request_image_srv = 
-    node->create_service<std_srvs::srv::SetBool>(request_image_srv_name, &request_image_srv_process);
+    auto request_image_srv = 
+    node->create_service<std_srvs::srv::Trigger>(request_image_srv_name, &request_image_srv_process);
 
     device_path = get_device_path(serial_ID);
 
