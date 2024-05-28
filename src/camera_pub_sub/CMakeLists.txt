@@ -25,7 +25,7 @@ find_package(OpenCV 4 REQUIRED)
 # pkg_check_modules(libudev REQUIRED libudev)
 
 # Camera encoder
-add_executable(camera_encoder src/camera_encoder.cpp src/usb_device.cpp)
+add_executable(camera_encoder src/camera_encoder.cpp src/usb_device.cpp src/helper_functions.cpp)
 ament_target_dependencies(camera_encoder rclcpp sensor_msgs std_srvs image_transport cv_bridge OpenCV)
 
 # Camera decoder
