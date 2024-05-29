@@ -67,7 +67,8 @@ bool set_resolution(int width, int height)
     if (width <= cameraCapWidth && height <= cameraCapHeight)
     {
         imageSendWidth = width;
-        imageSendWidth = height;
+        imageSendHeight = height;
+
         return true;
     }
     
@@ -135,7 +136,11 @@ void set_resolution_srv_process(const std::shared_ptr<rcl_interfaces::srv::Descr
           std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Response> response)
 {
     // TEMP solution, can't do custom srvs for current web gui sys
-    bool success = set_resolution(stoi(request->names[0]), stoi(request->names[1]));
+    bool resSuccess = set_resolution(stoi(request->names[0]), stoi(request->names[1]));
+    bool frameSuccess = set_framerate(stoi(request->names[2]));
+
+    bool success = resSuccess && frameSuccess;
+    response->descriptors.emplace_back();
     response->descriptors[0].name = success ? "1" : "0";
 }
 
