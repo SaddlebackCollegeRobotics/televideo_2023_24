@@ -22,63 +22,6 @@ std::string camera_name;
 std::string device_path;
 std::string compression_format;
 
-struct ResolutionData
-{
-    int width = 0;
-    int height = 0;
-};
-
-static std::vector<ResolutionData> get_supported_resolutions()
-{
-    std::vector<ResolutionData> result;
-
-    // Get supported camera resolutions
-    std::string command = "v4l2-ctl -d /dev/video0 --list-formats-ext";
-    std::string resolution_list = exec(command.c_str());
-
-    std::stringstream stream(resolution_list);
-    std::string line;
-    std::string endword = "]:";
-    std::string keyword = "Size";
-    std::string resolution_sep = "x";
-
-    std::string device_path_found = "";
-    size_t start_index = std::string::npos;
-
-    while (std::getline(stream, line)) 
-    {
-        // Iterate until the correct device is found.
-        if (start_index == std::string::npos)
-        {
-            //Find start index
-            start_index = line.find(compression_format);
-            continue;
-        }
-
-        // Compression format has been found. Remaining lines are resolution specs or FPS
-        
-        // Skip fps lines
-        if (line.find("fps"))
-        {
-            continue;
-        }
-
-        auto sep_pos = line.find(resolution_sep);
-
-        // Left num starting pos: ending at 'x', beginning at the last ' ' before.
-        auto left_num_str = line.substr(0, sep_pos);
-        left_num_str = left_num_str.substr(left_num_str.rfind(' ') + 1);
-
-        // Right num starting pos: beginning after 'x' until '\n'
-        auto right_num_str = line.substr(sep_pos);
-
-        result.push_back(ResolutionData{std::stoi(left_num_str), std::stoi(right_num_str)});
-            
-    }
-
-    return result;
-}
-
 bool toggle_camera(bool enableCamera)
 {   
     bool success = true;
@@ -115,12 +58,6 @@ void toggle_camera_srv_process(const std::shared_ptr<std_srvs::srv::SetBool::Req
           std::shared_ptr<std_srvs::srv::SetBool::Response> response)
 {
     response->success = toggle_camera(request->data);
-}
-
-void request_image_srv_process(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
-          std::shared_ptr<std_srvs::srv::Trigger::Response> response)
-{
-        
 }
 
 int main(int argc, char ** argv)
@@ -176,9 +113,6 @@ int main(int argc, char ** argv)
 
     auto toggle_camera_srv = 
     node->create_service<std_srvs::srv::SetBool>(toggle_srv_name, &toggle_camera_srv_process);
-
-    auto request_image_srv = 
-    node->create_service<std_srvs::srv::Trigger>(request_image_srv_name, &request_image_srv_process);
 
     device_path = get_device_path(serial_ID);
 

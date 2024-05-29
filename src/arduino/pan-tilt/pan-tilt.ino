@@ -16,8 +16,8 @@ int yawPulsewidth;
 namespace camera{
   Servo pitch;
   Servo yaw;
-  const int pitchPin = 2;
-  const int yawPin = 3;
+  const int pitchPin = 2; // D2
+  const int yawPin = 3;   // D3
 }
 
 void setup() {
