@@ -1,6 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+
 def generate_launch_description():
 
     camera_encoder = Node(
@@ -16,15 +17,14 @@ def generate_launch_description():
             {'camera_cap_fps': 30},
             {'image_send_width': 1280},
             {'image_send_height': 720},
-            {'image_send_fps': 30},
+            {'image_send_fps': 15},
             {'auto_enable_camera': False},
             {'host_machine': 'amd64'},
             {'camera1.transport.format': 'jpeg'},
-            {'camera1.transport.jpeg_quality': 10}
+            {'camera1.transport.jpeg_quality': 80}
         ],
     )
 
     return LaunchDescription([
         camera_encoder
     ])
-
