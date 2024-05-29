@@ -1,0 +1,5 @@
+launch:
+
+- node:
+    pkg: "heartbeat_manager"
+    exec: "heartbeat_publisher"

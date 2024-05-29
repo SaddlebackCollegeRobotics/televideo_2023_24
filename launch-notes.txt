@@ -1,0 +1,8 @@
+# Launch heartbeat_manager:
+ros2 run heartbeat_manager heartbeat_publisher
+
+# Linux systemd service for heartbeat system
+# heartbeat-manager.service - runs on rover or base
+# service resides in /etc/systemd/system/
+# To copy a new service file:
+sudo cp heartbeat-manager.service /etc/systemd/system/
