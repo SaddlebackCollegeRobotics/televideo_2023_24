@@ -247,7 +247,7 @@ int main(int argc, char ** argv)
         node->create_service<std_srvs::srv::Trigger>(request_image_srv_name, &request_image_srv_process);
 
     auto set_resolution_srv =
-        node->create_service<rcl_interfaces::srv::DescribeParameters>(set_resolution_srv_name, &set_resolution);
+        node->create_service<rcl_interfaces::srv::DescribeParameters>(set_resolution_srv_name, &set_resolution_srv_process);
 
     device_path = get_device_path(serial_ID);
 
