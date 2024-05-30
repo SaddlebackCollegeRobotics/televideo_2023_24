@@ -53,8 +53,14 @@ class CameraViewer():
 def generate_launch_description():
 
     camera_list = [
-        CameraDecoder("camera1"),
-        CameraDecoder("camera2"),
+        # CameraDecoder("camera_forearm"),
+        CameraDecoder("camera_ee_down"),
+        CameraDecoder("camera_ee_forward"),
+        CameraDecoder("camera_front_right"),
+        CameraDecoder("camera_front_left"),
+        CameraDecoder("camera_back_right"),
+        CameraDecoder("camera_back_left"),
+        # CameraDecoder("camera_mast"),
     ]
 
     node_list = []
