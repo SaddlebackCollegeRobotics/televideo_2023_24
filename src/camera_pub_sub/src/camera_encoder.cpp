@@ -12,71 +12,78 @@
 #include "std_msgs/msg/header.hpp"
 #include "std_srvs/srv/set_bool.hpp"
 #include "std_srvs/srv/trigger.hpp"
-
+#include "rcl_interfaces/srv/describe_parameters.hpp"
+#include <thread>
 #include "usb_device.h"
 
+
+rclcpp::Node::SharedPtr node;
 
 std::ostringstream gstreamer_api;
 cv::VideoCapture videoCapture;
 std::string camera_name;
 std::string device_path;
 std::string compression_format;
+std::string hostMachine;
 
-struct ResolutionData
+int imageSendWidth;
+int imageSendHeight;
+int imageSendFPS;
+
+int cameraCapWidth;
+int cameraCapHeight;
+int cameraCapFPS;
+
+rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr request_image_pub;
+
+void build_gstreamer_api()
 {
-    int width = 0;
-    int height = 0;
-};
-
-static std::vector<ResolutionData> get_supported_resolutions()
-{
-    std::vector<ResolutionData> result;
-
-    // Get supported camera resolutions
-    std::string command = "v4l2-ctl -d /dev/video0 --list-formats-ext";
-    std::string resolution_list = exec(command.c_str());
-
-    std::stringstream stream(resolution_list);
-    std::string line;
-    std::string endword = "]:";
-    std::string keyword = "Size";
-    std::string resolution_sep = "x";
-
-    std::string device_path_found = "";
-    size_t start_index = std::string::npos;
-
-    while (std::getline(stream, line)) 
+    gstreamer_api.clear();
+    
+    // GStreamer pipeline for capturing from the camera, used by OpenCV
+    if (hostMachine == "jetson")
     {
-        // Iterate until the correct device is found.
-        if (start_index == std::string::npos)
-        {
-            //Find start index
-            start_index = line.find(compression_format);
-            continue;
-        }
-
-        // Compression format has been found. Remaining lines are resolution specs or FPS
-        
-        // Skip fps lines
-        if (line.find("fps"))
-        {
-            continue;
-        }
-
-        auto sep_pos = line.find(resolution_sep);
-
-        // Left num starting pos: ending at 'x', beginning at the last ' ' before.
-        auto left_num_str = line.substr(0, sep_pos);
-        left_num_str = left_num_str.substr(left_num_str.rfind(' ') + 1);
-
-        // Right num starting pos: beginning after 'x' until '\n'
-        auto right_num_str = line.substr(sep_pos);
-
-        result.push_back(ResolutionData{std::stoi(left_num_str), std::stoi(right_num_str)});
-            
+        gstreamer_api << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
+        << "image/jpeg,width=" << cameraCapWidth << ","
+        << "height=" << cameraCapHeight << ","
+        << "framerate=" << cameraCapFPS << "/1 ! "
+        << "jpegdec" << " ! "
+       	<< "video/x-raw ! appsink";
+    }
+    else if (hostMachine == "amd64")
+    {
+        gstreamer_api << "v4l2src device=" << device_path << " ! "
+        << "image/jpeg,width=" << cameraCapWidth << ","
+        << "height=" << cameraCapHeight << ","
+        << "framerate=" << cameraCapFPS << "/1,"
+        << "format=(string)" << compression_format << " ! "
+        << "decodebin ! appsink";
     }
 
-    return result;
+}
+
+bool set_resolution(int width, int height)
+{
+    if (width <= cameraCapWidth && height <= cameraCapHeight)
+    {
+        imageSendWidth = width;
+        imageSendHeight = height;
+
+        return true;
+    }
+    
+    return false;
+}
+
+bool set_framerate(int fps)
+{
+    if (fps <= cameraCapFPS)
+    {
+        imageSendFPS = fps;
+        return true;
+    }
+
+    return false;
 }
 
 bool toggle_camera(bool enableCamera)
@@ -111,16 +118,74 @@ bool toggle_camera(bool enableCamera)
     return success;
 }
 
+bool rebuild_camera_stream()
+{
+    toggle_camera(false);
+    build_gstreamer_api();
+
+    return toggle_camera(true);
+}
+
 void toggle_camera_srv_process(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
           std::shared_ptr<std_srvs::srv::SetBool::Response> response)
 {
     response->success = toggle_camera(request->data);
 }
 
+void set_resolution_srv_process(const std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Request> request,
+          std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Response> response)
+{
+    // TEMP solution, can't do custom srvs for current web gui sys
+    bool resSuccess = set_resolution(stoi(request->names[0]), stoi(request->names[1]));
+    bool frameSuccess = set_framerate(stoi(request->names[2]));
+
+    bool success = resSuccess && frameSuccess;
+    response->descriptors.emplace_back();
+    response->descriptors[0].name = success ? "1" : "0";
+}
+
 void request_image_srv_process(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
           std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
-        
+    cv::Mat frame;
+    cv::Mat resizedFrame;
+    std_msgs::msg::Header header;
+    sensor_msgs::msg::Image::SharedPtr msg;
+    bool success = false;
+
+    int origCapWidth = cameraCapWidth;
+    int origCapHeight = cameraCapHeight;
+
+    // Change globals
+    cameraCapWidth = 1920;
+    cameraCapHeight = 1080;
+
+    rebuild_camera_stream();
+
+    // TEMP solution, can't do custom srvs for current web gui sys
+    if (videoCapture.isOpened())
+    {
+        videoCapture >> frame;
+
+        if (!frame.empty()) 
+        {
+            cv::resize(frame, resizedFrame, cv::Size(1920, 1080), 0.0, 0.0, cv::INTER_AREA);
+            msg = cv_bridge::CvImage(header, "bgr8", resizedFrame).toImageMsg();
+            
+            request_image_pub->publish(*msg);
+            rclcpp::spin_some(node);
+
+            success = true;
+        }
+    }
+
+    // Change back to original feed resolution
+    cameraCapWidth = origCapWidth;
+    cameraCapHeight = origCapHeight;
+
+    rebuild_camera_stream();
+
+    response->success = success;
 }
 
 int main(int argc, char ** argv)
@@ -128,7 +193,7 @@ int main(int argc, char ** argv)
     rclcpp::init(argc, argv);
 
     rclcpp::NodeOptions options;
-    rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("camera_publisher", options);
+    node = rclcpp::Node::make_shared("camera_publisher", options);
 
     node->declare_parameter("camera_name", "camera1");
     node->declare_parameter("serial_ID", "");
@@ -150,13 +215,13 @@ int main(int argc, char ** argv)
     // Currently implemented: amd64, jetson
     node->declare_parameter("host_machine", "jetson");
 
-    int cameraCapWidth = node->get_parameter("camera_cap_width").as_int();
-    int cameraCapHeight = node->get_parameter("camera_cap_height").as_int();
-    int cameraCapFPS = node->get_parameter("camera_cap_fps").as_int();
+    cameraCapWidth = node->get_parameter("camera_cap_width").as_int();
+    cameraCapHeight = node->get_parameter("camera_cap_height").as_int();
+    cameraCapFPS = node->get_parameter("camera_cap_fps").as_int();
 
-    int imageSendWidth = node->get_parameter("image_send_width").as_int();
-    int imageSendHeight = node->get_parameter("image_send_height").as_int();
-    int imageSendFPS = node->get_parameter("image_send_fps").as_int();
+    imageSendWidth = node->get_parameter("image_send_width").as_int();
+    imageSendHeight = node->get_parameter("image_send_height").as_int();
+    imageSendFPS = node->get_parameter("image_send_fps").as_int();
 
     bool autoEnableCamera = node->get_parameter("auto_enable_camera").as_bool();
 
@@ -164,21 +229,30 @@ int main(int argc, char ** argv)
     compression_format = node->get_parameter("compression_format").as_string();
     camera_name = node->get_parameter("camera_name").as_string();
 
-    std::string hostMachine = node->get_parameter("host_machine").as_string();
+    hostMachine = node->get_parameter("host_machine").as_string();
 
     std::string base_topic = camera_name + "/transport";
     std::string toggle_srv_name = camera_name + "/toggle_camera";
     std::string request_image_srv_name = camera_name + "/request_image";
+    std::string request_image_pub_name = camera_name + "/request_image_pub";
+    std::string set_resolution_srv_name = camera_name + "/set_resolution";
 
     // TODO - Switch to image_transport::CameraPublisher to get access to qos
     image_transport::ImageTransport transport(node);
     image_transport::Publisher publisher = transport.advertise(base_topic, 1);
 
+    rclcpp::SystemDefaultsQoS qos;
+    request_image_pub = 
+        node->create_publisher<sensor_msgs::msg::Image>(request_image_pub_name, qos);
+
     auto toggle_camera_srv = 
-    node->create_service<std_srvs::srv::SetBool>(toggle_srv_name, &toggle_camera_srv_process);
+        node->create_service<std_srvs::srv::SetBool>(toggle_srv_name, &toggle_camera_srv_process);
 
     auto request_image_srv = 
-    node->create_service<std_srvs::srv::Trigger>(request_image_srv_name, &request_image_srv_process);
+        node->create_service<std_srvs::srv::Trigger>(request_image_srv_name, &request_image_srv_process);
+
+    auto set_resolution_srv =
+        node->create_service<rcl_interfaces::srv::DescribeParameters>(set_resolution_srv_name, &set_resolution_srv_process);
 
     device_path = get_device_path(serial_ID);
 
@@ -195,25 +269,7 @@ int main(int argc, char ** argv)
         << device_path << "}" << std::endl;
     }
 
-    // GStreamer pipeline for capturing from the camera, used by OpenCV
-    if (hostMachine == "jetson")
-    {
-        gstreamer_api << "v4l2src device=" << device_path << " io-mode=2"<< " ! "
-        << "image/jpeg,width=" << cameraCapWidth << ","
-        << "height=" << cameraCapHeight << ","
-        << "framerate=" << cameraCapFPS << "/1 ! "
-        << "jpegdec" << " ! "
-       	<< "video/x-raw ! appsink";
-    }
-    else if (hostMachine == "amd64")
-    {
-        gstreamer_api << "v4l2src device=" << device_path << " ! "
-        << "image/jpeg,width=" << cameraCapWidth << ","
-        << "height=" << cameraCapHeight << ","
-        << "framerate=" << cameraCapFPS << "/1,"
-        << "format=(string)" << compression_format << " ! "
-        << "decodebin ! appsink";
-    }
+    build_gstreamer_api();
 
     if (autoEnableCamera)
     {
@@ -224,10 +280,7 @@ int main(int argc, char ** argv)
     cv::Mat resizedFrame;
     std_msgs::msg::Header header;
     sensor_msgs::msg::Image::SharedPtr msg;
-
-    // This is in Hz
-    rclcpp::WallRate loop_rate(imageSendFPS);
-
+    
     while (rclcpp::ok()) 
     {
         if (videoCapture.isOpened())
@@ -243,7 +296,7 @@ int main(int argc, char ** argv)
         }
         
         rclcpp::spin_some(node);
-        loop_rate.sleep();
+        std::this_thread::sleep_for(std::chrono::milliseconds((1000 / imageSendFPS)));
     }
 
     return 0;
