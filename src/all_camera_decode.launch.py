@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from dataclasses import dataclass
 
-ENABLE_WINDOW_VIEW = True
+ENABLE_WINDOW_VIEW = False
 IMAGE_TRANSPORT = "compressed"
 
 @dataclass
@@ -53,14 +53,14 @@ class CameraViewer():
 def generate_launch_description():
 
     camera_list = [
-        # CameraDecoder("camera_forearm"),
+        CameraDecoder("camera_forearm"),
         CameraDecoder("camera_ee_down"),
         CameraDecoder("camera_ee_forward"),
-        CameraDecoder("camera_front_right"),
-        CameraDecoder("camera_front_left"),
-        CameraDecoder("camera_back_right"),
-        CameraDecoder("camera_back_left"),
-        # CameraDecoder("camera_mast"),
+        #CameraDecoder("camera_front_right"),
+        #CameraDecoder("camera_front_left"),
+        #CameraDecoder("camera_back_right"),
+        #CameraDecoder("camera_back_left"),
+        CameraDecoder("camera_mast"),
     ]
 
     node_list = []

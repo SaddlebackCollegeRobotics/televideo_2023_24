@@ -46,7 +46,7 @@ class CameraEncoder():
                 {'image_send_width': self.send_width},
                 {'image_send_height': self.send_height},
                 {'image_send_fps': self.send_framerate},
-                {'auto_enable_camera': True},
+                {'auto_enable_camera': False},
                 {'host_machine': HOST_MACHINE},
                 {'camera1.transport.format': 'jpeg'},
                 {'camera1.transport.jpeg_quality': self.jpeg_quality}
@@ -59,14 +59,14 @@ class CameraEncoder():
 def generate_launch_description():
 
     camera_list = (
-        # CameraEncoder("camera_forearm", "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0010"),
+        CameraEncoder("camera_forearm", "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0010"),
         CameraEncoder("camera_ee_down", "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0004"),
         CameraEncoder("camera_ee_forward", "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0001"),
         CameraEncoder("camera_front_right", "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0007"),
         CameraEncoder("camera_front_left", "Arducam_Technology_Co.__Ltd._Arducam_IMX179_Camera_0009"),
         CameraEncoder("camera_back_right", "Arducam_Technology_Co.__Ltd._0b12_0006"),
         CameraEncoder("camera_back_left", "Arducam_Technology_Co.__Ltd._0b12_0005"),
-        # CameraEncoder("camera_mast", "16MP_Camera_Mamufacture_16MP_USB_Camera_2022050701"),
+        CameraEncoder("camera_mast", "16MP_Camera_Mamufacture_16MP_USB_Camera_2022050701"),
 
     )
     
