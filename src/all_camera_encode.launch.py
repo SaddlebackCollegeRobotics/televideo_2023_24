@@ -48,8 +48,8 @@ class CameraEncoder():
                 {'image_send_fps': self.send_framerate},
                 {'auto_enable_camera': False},
                 {'host_machine': HOST_MACHINE},
-                {'camera1.transport.format': 'jpeg'},
-                {'camera1.transport.jpeg_quality': self.jpeg_quality}
+                {self.camera_name + '.transport.format': 'jpeg'},
+                {self.camera_name + '.transport.jpeg_quality': self.jpeg_quality}
             ],
         )  
 
